@@ -26,8 +26,32 @@ export const metadata: Metadata = {
     "rankings platform",
     "create rankings",
     "perfect rankings",
+    "tier lists",
+    "tier lists platform",
+    "create tier lists",
+    "tier lists creator",
   ],
   authors: [{ name: "Max Nankivell", url: baseUrl }],
+  alternates: {
+    canonical: baseUrl,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  applicationName: "Objective Rankings",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    title: "Objective",
+  },
   openGraph: {
     title: "Objective Rankings",
     description:
@@ -51,26 +75,6 @@ export const metadata: Metadata = {
     description:
       "Objective Rankings is a platform for creating completely correct and perfect rankings.",
     images: ["/web-app-manifest-512x512.png"],
-  },
-  alternates: {
-    canonical: baseUrl,
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  applicationName: "Objective Rankings",
-  icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
-    ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: "/site.webmanifest",
-  appleWebApp: {
-    title: "Objective",
   },
 };
 
