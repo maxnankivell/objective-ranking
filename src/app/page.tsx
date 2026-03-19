@@ -23,7 +23,7 @@ export default function Home() {
             >
               feature request on GitHub
             </a>{" "}
-            (you will need an account to do this sorry).
+            (you will need a Github account to do this sorry).
           </p>
         </div>
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
