@@ -1,4 +1,5 @@
 import Button from "../components/Button";
+import HomeToggleClient from "./home-toggle-client";
 
 export default function Home() {
   return (
@@ -46,6 +47,9 @@ export default function Home() {
           >
             Documentation
           </a>
+        </div>
+        <div className="w-full">
+          <HomeToggleClient />
         </div>
       </main>
     </div>

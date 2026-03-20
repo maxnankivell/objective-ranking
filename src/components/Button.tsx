@@ -4,9 +4,9 @@ type ButtonSize = "small" | "medium" | "large";
 type ButtonVariant = "contained" | "outlined";
 
 const sizeClasses: Record<ButtonSize, string> = {
-  small: "h-9 px-3 text-sm",
-  medium: "h-12 px-5 text-base",
-  large: "h-14 px-6 text-lg",
+  small: "h-3 px-5 text-sm",
+  medium: "py-4 px-8 text-base",
+  large: "h-6 px-12 text-lg",
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -19,11 +19,13 @@ const variantClasses: Record<ButtonVariant, string> = {
 export type ButtonProps = ComponentProps<"button"> & {
   size?: ButtonSize;
   variant?: ButtonVariant;
+  fullWidth?: boolean;
 };
 
 export default function Button({
   size = "medium",
   variant = "contained",
+  fullWidth = false,
   className,
   type,
   ...props
@@ -32,7 +34,8 @@ export default function Button({
     <button
       type={type ?? "button"}
       className={[
-        "flex w-full cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors md:w-[158px] disabled:cursor-not-allowed",
+        "flex cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors disabled:cursor-not-allowed",
+        fullWidth ? "w-full max-w-none" : "max-w-40",
         variantClasses[variant],
         sizeClasses[size],
         className,
