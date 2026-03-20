@@ -11,7 +11,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 
 const variantClasses: Record<ButtonVariant, string> = {
   contained:
-    "bg-emerald-500 text-black hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:hover:bg-emerald-500/50",
+    "border-2 border-transparent bg-emerald-500 text-black hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:hover:bg-emerald-500/50",
   outlined:
     "border-2 border-emerald-500 bg-transparent text-emerald-700 hover:bg-emerald-500/10 disabled:border-emerald-500/40 disabled:text-emerald-700/50 disabled:hover:bg-transparent",
 };

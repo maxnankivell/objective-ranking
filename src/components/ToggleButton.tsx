@@ -47,7 +47,10 @@ export default function ToggleButton({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={["flex w-full flex-row items-stretch", className]
+      className={[
+        "inline-grid auto-cols-[1fr] grid-rows-1 grid-flow-col justify-start",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
     >
@@ -61,10 +64,10 @@ export default function ToggleButton({
             aria-checked={selected}
             size={size}
             variant={selected ? "contained" : "outlined"}
+            fullWidth={true}
             className={[
-              // "relative min-w-0 flex-1 w-auto! md:w-auto!",
+              "min-w-max! md:min-w-max!",
               segmentShapeClass(index, total),
-              index > 0 && "-ml-[2px]",
               selected && "z-10",
               "focus-visible:z-20",
             ]

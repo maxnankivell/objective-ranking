@@ -6,8 +6,8 @@ import ToggleButton from "../components/ToggleButton";
 
 const OPTIONS = [
   { value: "tier", label: "Tier list" },
-  { value: "ordered", label: "Ordered list" },
-  { value: "ordered1", label: "Ordered list htoethu htohtuohet" },
+  { value: "ordered", label: "Ordered list ten" },
+  // { value: "ordered1", label: "Ordered list htoethu htohtuohet" },
 ] as const;
 
 export default function HomeToggleClient() {
