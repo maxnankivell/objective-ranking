@@ -56,6 +56,22 @@ const MD_GRID_COLS = [
   "md:grid-cols-12",
 ] as const;
 
+const LG_GRID_COLS = [
+  "",
+  "lg:grid-cols-1",
+  "lg:grid-cols-2",
+  "lg:grid-cols-3",
+  "lg:grid-cols-4",
+  "lg:grid-cols-5",
+  "lg:grid-cols-6",
+  "lg:grid-cols-7",
+  "lg:grid-cols-8",
+  "lg:grid-cols-9",
+  "lg:grid-cols-10",
+  "lg:grid-cols-11",
+  "lg:grid-cols-12",
+] as const;
+
 function clampGridIndex(n: number): number {
   return Math.min(12, Math.max(1, Math.floor(n)));
 }
@@ -65,6 +81,7 @@ export type CardSelectorProps = {
   columnsBelowSm: number;
   columnsSm: number;
   columnsMd: number;
+  columnsLg: number;
   value: string | null;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -78,6 +95,7 @@ export default function CardSelector({
   columnsBelowSm,
   columnsSm,
   columnsMd,
+  columnsLg,
   value,
   onChange,
   disabled: groupDisabled = false,
@@ -89,6 +107,7 @@ export default function CardSelector({
   const baseIdx = clampGridIndex(columnsBelowSm);
   const smIdx = clampGridIndex(columnsSm);
   const mdIdx = clampGridIndex(columnsMd);
+  const lgIdx = clampGridIndex(columnsLg);
 
   const isRowDisabled = (option: CardSelectorOption) =>
     groupDisabled || !!option.disabled;
@@ -114,6 +133,7 @@ export default function CardSelector({
           BASE_GRID_COLS[baseIdx],
           SM_GRID_COLS[smIdx],
           MD_GRID_COLS[mdIdx],
+          LG_GRID_COLS[lgIdx],
         ].join(" ")}
       >
         {options.map((option) => {

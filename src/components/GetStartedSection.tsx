@@ -30,6 +30,7 @@ export default function GetStartedSection() {
         columnsBelowSm={1}
         columnsSm={2}
         columnsMd={3}
+        columnsLg={4}
         value={selected}
         onChange={setSelected}
       />

@@ -103,7 +103,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <Header />
-        {children}
+        <div className="flex flex-col flex-1 items-center bg-mist-100 dark:bg-black">
+          <div className="flex flex-1 w-full max-w-7xl py-16 px-16 bg-white dark:bg-mist-900">
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );
