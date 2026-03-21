@@ -78,6 +78,7 @@ export default function JsonUpload() {
   }, [items]);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     added: number;
@@ -118,7 +119,21 @@ export default function JsonUpload() {
       <h2 className="text-2xl font-bold text-subheading">Add items via JSON</h2>
 
       <label
-        className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-neutral-400 px-6 py-8 text-sm transition-colors hover:border-emerald-500 dark:border-neutral-600 dark:hover:border-emerald-500"
+        className={`flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed px-6 py-8 text-sm transition-colors hover:border-emerald-500 dark:hover:border-emerald-500 ${
+          isDragOver
+            ? "border-emerald-500 dark:border-emerald-500"
+            : "border-neutral-400 dark:border-neutral-600"
+        }`}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -126,6 +141,7 @@ export default function JsonUpload() {
         onDrop={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          setIsDragOver(false);
           const file = e.dataTransfer.files[0];
           if (file) handleFile(file);
         }}
@@ -141,7 +157,7 @@ export default function JsonUpload() {
             e.target.value = "";
           }}
         />
-        <span className="text-subheading">
+        <span className="pointer-events-none text-subheading">
           Drop a JSON file here or click to browse
         </span>
       </label>
