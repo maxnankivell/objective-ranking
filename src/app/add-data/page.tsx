@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AddDataMethodTabs from "../../components/AddDataMethodTabs";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -16,6 +17,7 @@ export default function AddData() {
         Enter your data and then choose what kind of ranking to make and how to
         make it.
       </p>
+      <AddDataMethodTabs />
     </div>
   );
 }
