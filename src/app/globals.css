@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@utility text-heading {
+  @apply text-black dark:text-white;
+}
+@utility text-subheading {
+  @apply text-neutral-950 dark:text-neutral-50;
+}
+@utility text-body {
+  @apply text-neutral-800 dark:text-neutral-200;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

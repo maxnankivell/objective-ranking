@@ -100,10 +100,7 @@ export default function CardSelector({
         .join(" ")}
     >
       {label != null && (
-        <h2
-          id={labelId}
-          className="text-2xl font-bold text-mist-950 dark:text-mist-50"
-        >
+        <h2 id={labelId} className="text-2xl font-bold text-subheading">
           {label}
         </h2>
       )}
@@ -136,7 +133,7 @@ export default function CardSelector({
                 "disabled:cursor-not-allowed disabled:opacity-50",
                 selected
                   ? "border-emerald-500 bg-emerald-500 text-black dark:text-black disabled:border-emerald-500/60 disabled:bg-emerald-500/50"
-                  : "border-neutral-300 bg-transparent text-neutral-900 enabled:hover:border-emerald-400 enabled:hover:bg-emerald-500/10 dark:border-neutral-600 dark:text-neutral-100 dark:enabled:hover:border-emerald-500/80",
+                  : "border-mist-300 bg-transparent text-mist-950 enabled:hover:border-emerald-400 enabled:hover:bg-emerald-500/10 dark:border-mist-600 dark:text-mist-50 dark:enabled:hover:border-emerald-500/80",
               ].join(" ")}
             >
               {option.label}
