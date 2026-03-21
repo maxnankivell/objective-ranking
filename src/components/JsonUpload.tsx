@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRankingData } from "../contexts/RankingDataContext";
 import type { RankingData } from "../types/RankingData";
 
@@ -49,27 +49,62 @@ function validateAndParse(raw: unknown): RankingData[] {
   });
 }
 
+function filterDuplicates(
+  existing: RankingData[],
+  parsed: RankingData[],
+): { toAdd: RankingData[]; duplicateCount: number } {
+  const seen = new Set(existing.map((i) => i.title));
+  const toAdd: RankingData[] = [];
+  let duplicateCount = 0;
+  for (const item of parsed) {
+    if (seen.has(item.title)) {
+      duplicateCount++;
+      continue;
+    }
+    seen.add(item.title);
+    toAdd.push(item);
+  }
+  return { toAdd, duplicateCount };
+}
+
 export default function JsonUpload() {
-  const { addItems } = useRankingData();
+  const { items, addItems } = useRankingData();
+
+  // FileReader.onload runs later; it would close over a stale `items` from when
+  // the file was chosen. The ref always holds the latest list for deduping.
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [successCount, setSuccessCount] = useState<number | null>(null);
+  const [success, setSuccess] = useState<{
+    added: number;
+    duplicates: number;
+  } | null>(null);
 
   function handleFile(file: File) {
     setError(null);
-    setSuccessCount(null);
+    setSuccess(null);
 
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const parsed = JSON.parse(reader.result as string);
-        const items = validateAndParse(parsed);
-        if (items.length === 0) {
+        const parsedItems = validateAndParse(parsed);
+        if (parsedItems.length === 0) {
           setError("JSON array is empty");
           return;
         }
-        addItems(items);
-        setSuccessCount(items.length);
+        const { toAdd, duplicateCount } = filterDuplicates(
+          itemsRef.current,
+          parsedItems,
+        );
+        if (toAdd.length > 0) {
+          addItems(toAdd);
+        }
+        setSuccess({ added: toAdd.length, duplicates: duplicateCount });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Invalid JSON file");
       }
@@ -113,10 +148,40 @@ export default function JsonUpload() {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {successCount !== null && (
+      {success !== null && (
         <p className="text-sm text-emerald-500">
-          Successfully added {successCount}{" "}
-          {successCount === 1 ? "entry" : "entries"}
+          {success.added > 0 ? (
+            <>
+              Successfully added {success.added}{" "}
+              {success.added === 1 ? "entry" : "entries"}
+              {success.duplicates > 0 ? (
+                <>
+                  {" "}
+                  after removing duplicates. {success.duplicates}{" "}
+                  {success.duplicates === 1
+                    ? "duplicate was"
+                    : "duplicates were"}{" "}
+                  ignored.
+                </>
+              ) : (
+                "."
+              )}
+            </>
+          ) : (
+            <>
+              No new entries were added.
+              {success.duplicates > 0 && (
+                <>
+                  {" "}
+                  {success.duplicates}{" "}
+                  {success.duplicates === 1
+                    ? "duplicate was"
+                    : "duplicates were"}{" "}
+                  ignored.
+                </>
+              )}
+            </>
+          )}
         </p>
       )}
     </div>

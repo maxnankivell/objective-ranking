@@ -48,11 +48,24 @@ export function RankingDataProvider({
   }, [items, hydrated]);
 
   const addItem = useCallback((item: RankingData) => {
-    setItems((prev) => [...prev, item]);
+    setItems((prev) => {
+      if (prev.some((i) => i.title === item.title)) return prev;
+      return [...prev, item];
+    });
   }, []);
 
   const addItems = useCallback((newItems: RankingData[]) => {
-    setItems((prev) => [...prev, ...newItems]);
+    setItems((prev) => {
+      const seen = new Set(prev.map((i) => i.title));
+      const toAdd: RankingData[] = [];
+      for (const item of newItems) {
+        if (seen.has(item.title)) continue;
+        seen.add(item.title);
+        toAdd.push(item);
+      }
+      if (toAdd.length === 0) return prev;
+      return [...prev, ...toAdd];
+    });
   }, []);
 
   const clearItems = useCallback(() => {
