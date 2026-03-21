@@ -16,6 +16,7 @@ interface RankingDataContextValue {
   addItem: (item: RankingData) => void;
   addItems: (items: RankingData[]) => void;
   clearItems: () => void;
+  removeItemsByTitle: (title: string) => void;
 }
 
 const RankingDataContext = createContext<RankingDataContextValue | null>(null);
@@ -58,8 +59,14 @@ export function RankingDataProvider({
     setItems([]);
   }, []);
 
+  const removeItemsByTitle = useCallback((title: string) => {
+    setItems((prev) => prev.filter((item) => item.title !== title));
+  }, []);
+
   return (
-    <RankingDataContext value={{ items, addItem, addItems, clearItems }}>
+    <RankingDataContext
+      value={{ items, addItem, addItems, clearItems, removeItemsByTitle }}
+    >
       {children}
     </RankingDataContext>
   );

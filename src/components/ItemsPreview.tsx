@@ -8,7 +8,7 @@ type ItemsPreviewProps = {
 };
 
 export default function ItemsPreview({ className }: ItemsPreviewProps) {
-  const { items } = useRankingData();
+  const { items, removeItemsByTitle } = useRankingData();
 
   if (items.length === 0) return null;
 
@@ -25,6 +25,7 @@ export default function ItemsPreview({ className }: ItemsPreviewProps) {
             key={`${item.title}-${i}`}
             title={item.title}
             image={item.image}
+            onDelete={removeItemsByTitle}
           />
         ))}
       </div>
