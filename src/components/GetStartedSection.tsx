@@ -23,11 +23,13 @@ export default function GetStartedSection() {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col gap-4 w-full items-start">
+    <div className="flex flex-col gap-4 w-full items-center text-center sm:items-start sm:text-left">
       <CardSelector
         label="Please Select Your Method"
         options={demoOptions}
-        columns={3}
+        columnsBelowSm={1}
+        columnsSm={2}
+        columnsMd={3}
         value={selected}
         onChange={setSelected}
       />

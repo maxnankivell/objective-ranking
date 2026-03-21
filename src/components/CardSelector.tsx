@@ -8,9 +8,63 @@ export type CardSelectorOption = {
   disabled?: boolean;
 };
 
+const BASE_GRID_COLS = [
+  "",
+  "grid-cols-1",
+  "grid-cols-2",
+  "grid-cols-3",
+  "grid-cols-4",
+  "grid-cols-5",
+  "grid-cols-6",
+  "grid-cols-7",
+  "grid-cols-8",
+  "grid-cols-9",
+  "grid-cols-10",
+  "grid-cols-11",
+  "grid-cols-12",
+] as const;
+
+const SM_GRID_COLS = [
+  "",
+  "sm:grid-cols-1",
+  "sm:grid-cols-2",
+  "sm:grid-cols-3",
+  "sm:grid-cols-4",
+  "sm:grid-cols-5",
+  "sm:grid-cols-6",
+  "sm:grid-cols-7",
+  "sm:grid-cols-8",
+  "sm:grid-cols-9",
+  "sm:grid-cols-10",
+  "sm:grid-cols-11",
+  "sm:grid-cols-12",
+] as const;
+
+const MD_GRID_COLS = [
+  "",
+  "md:grid-cols-1",
+  "md:grid-cols-2",
+  "md:grid-cols-3",
+  "md:grid-cols-4",
+  "md:grid-cols-5",
+  "md:grid-cols-6",
+  "md:grid-cols-7",
+  "md:grid-cols-8",
+  "md:grid-cols-9",
+  "md:grid-cols-10",
+  "md:grid-cols-11",
+  "md:grid-cols-12",
+] as const;
+
+function clampGridIndex(n: number): number {
+  return Math.min(12, Math.max(1, Math.floor(n)));
+}
+
 export type CardSelectorProps = {
   options: CardSelectorOption[];
-  columns: number;
+  columnsBelowSm: number;
+  columnsSm: number;
+  columnsMd: number;
   value: string | null;
   onChange: (value: string) => void;
   disabled?: boolean;
@@ -21,7 +75,9 @@ export type CardSelectorProps = {
 
 export default function CardSelector({
   options,
-  columns,
+  columnsBelowSm,
+  columnsSm,
+  columnsMd,
   value,
   onChange,
   disabled: groupDisabled = false,
@@ -30,7 +86,9 @@ export default function CardSelector({
   ariaLabel,
 }: CardSelectorProps) {
   const labelId = useId();
-  const safeColumns = Math.max(1, Math.floor(columns));
+  const baseIdx = clampGridIndex(columnsBelowSm);
+  const smIdx = clampGridIndex(columnsSm);
+  const mdIdx = clampGridIndex(columnsMd);
 
   const isRowDisabled = (option: CardSelectorOption) =>
     groupDisabled || !!option.disabled;
@@ -54,12 +112,14 @@ export default function CardSelector({
         aria-disabled={groupDisabled || undefined}
         aria-labelledby={label != null ? labelId : undefined}
         aria-label={label != null ? undefined : ariaLabel}
-        className="grid w-full gap-4"
-        style={{
-          gridTemplateColumns: `repeat(${safeColumns}, minmax(0, 1fr))`,
-        }}
+        className={[
+          "grid w-full gap-4",
+          BASE_GRID_COLS[baseIdx],
+          SM_GRID_COLS[smIdx],
+          MD_GRID_COLS[mdIdx],
+        ].join(" ")}
       >
-        {options.map((option, index) => {
+        {options.map((option) => {
           const rowDisabled = isRowDisabled(option);
           const selected = value === option.value;
 
