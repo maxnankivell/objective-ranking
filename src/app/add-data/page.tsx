@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import AddDataMethodTabs from "../../components/AddDataMethodTabs";
 import AddDataRankingStart from "../../components/AddDataRankingStart";
+import ItemsPreview from "../../components/ItemsPreview";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -18,6 +19,7 @@ export default function AddData() {
       </p>
       <AddDataMethodTabs className="mb-8" />
       <AddDataRankingStart className="mb-8" />
+      <ItemsPreview className="mb-8" />
     </div>
   );
 }
