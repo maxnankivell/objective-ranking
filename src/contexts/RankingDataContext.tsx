@@ -17,6 +17,7 @@ interface RankingDataContextValue {
   addItems: (items: RankingData[]) => void;
   clearItems: () => void;
   removeItemsByTitle: (title: string) => void;
+  updateRanks: (ranked: { title: string; rank?: number; unrankedIndex?: number }[]) => void;
 }
 
 const RankingDataContext = createContext<RankingDataContextValue | null>(null);
@@ -76,9 +77,31 @@ export function RankingDataProvider({
     setItems((prev) => prev.filter((item) => item.title !== title));
   }, []);
 
+  const updateRanks = useCallback(
+    (ranked: { title: string; rank?: number; unrankedIndex?: number }[]) => {
+      setItems((prev) => {
+        const updateMap = new Map(
+          ranked.map((r) => [r.title, { rank: r.rank, unrankedIndex: r.unrankedIndex }])
+        );
+        return prev.map((item) => {
+          const update = updateMap.get(item.title);
+          return update ? { ...item, ...update } : item;
+        });
+      });
+    },
+    []
+  );
+
   return (
     <RankingDataContext
-      value={{ items, addItem, addItems, clearItems, removeItemsByTitle }}
+      value={{
+        items,
+        addItem,
+        addItems,
+        clearItems,
+        removeItemsByTitle,
+        updateRanks,
+      }}
     >
       {children}
     </RankingDataContext>
