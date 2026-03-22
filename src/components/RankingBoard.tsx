@@ -3,9 +3,8 @@
 import { CollisionPriority } from "@dnd-kit/abstract";
 import { move } from "@dnd-kit/helpers";
 import { DragDropProvider, useDroppable } from "@dnd-kit/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRankingData } from "../contexts/RankingDataContext";
-import type { RankingData } from "../types/RankingData";
 import { deriveGroups, type Groups } from "../utils/rankingUtilities";
 import SortableItemTile from "./SortableItemTile";
 
@@ -15,12 +14,6 @@ type RankingBoardProps = {
 
 export default function RankingBoard({ className }: RankingBoardProps) {
   const { items, updateRanks } = useRankingData();
-
-  const itemsByTitle = useMemo(() => {
-    const map = new Map<string, RankingData>();
-    for (const item of items) map.set(item.title, item);
-    return map;
-  }, [items]);
 
   const [groups, setGroups] = useState<Groups>(() => deriveGroups(items));
   const groupsRef = useRef(groups);
@@ -90,7 +83,7 @@ export default function RankingBoard({ className }: RankingBoardProps) {
       >
         <RankedZone>
           {groups.ranked.map((title, index) => {
-            const item = itemsByTitle.get(title);
+            const item = items.find((i) => i.title === title);
             return (
               <SortableItemTile
                 key={title}
@@ -107,7 +100,7 @@ export default function RankingBoard({ className }: RankingBoardProps) {
 
         <UnrankedZone>
           {groups.unranked.map((title, index) => {
-            const item = itemsByTitle.get(title);
+            const item = items.find((i) => i.title === title);
             return (
               <SortableItemTile
                 key={title}
