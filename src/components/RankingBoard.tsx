@@ -29,7 +29,13 @@ export default function RankingBoard({ className }: RankingBoardProps) {
 
   if (items !== prevItems) {
     setPrevItems(items);
-    setGroups(deriveGroups(items));
+    const prevTitles = new Set(prevItems.map((i) => i.title));
+    const titlesChanged =
+      items.length !== prevItems.length ||
+      items.some((i) => !prevTitles.has(i.title));
+    if (titlesChanged) {
+      setGroups(deriveGroups(items));
+    }
   }
 
   useEffect(() => {
@@ -67,10 +73,15 @@ export default function RankingBoard({ className }: RankingBoardProps) {
           previousGroups.current = groupsRef.current;
         }}
         onDragOver={(event) => {
-          setGroups((groups) => move(groups, event));
+          setGroups((current) => {
+            const next = move(current, event);
+            groupsRef.current = next;
+            return next;
+          });
         }}
         onDragEnd={(event) => {
           if (event.canceled) {
+            groupsRef.current = previousGroups.current;
             setGroups(previousGroups.current);
             return;
           }
