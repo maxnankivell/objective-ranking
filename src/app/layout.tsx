@@ -106,7 +106,7 @@ export default function RootLayout({
         <Header />
         <Providers>
           <div className="flex flex-col flex-1 items-center bg-mist-200 dark:bg-black">
-            <div className="flex flex-1 w-full max-w-7xl py-16 px-16 bg-white dark:bg-mist-900">
+            <div className="flex flex-1 w-full max-w-7xl py-12 px-16 bg-white dark:bg-mist-900">
               {children}
             </div>
           </div>
