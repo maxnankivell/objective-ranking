@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRankingData } from "../contexts/RankingDataContext";
 import type { RankingData } from "../types/RankingData";
+import { ALL_TIER_LETTERS } from "../utils/rankingUtilities";
 
 function validateAndParse(raw: unknown): RankingData[] {
   if (!Array.isArray(raw)) {
@@ -38,6 +39,15 @@ function validateAndParse(raw: unknown): RankingData[] {
       item.rank = obj.rank;
     }
 
+    if (obj.unrankedIndex !== undefined) {
+      if (typeof obj.unrankedIndex !== "number") {
+        throw new Error(
+          `Entry at index ${i}: "unrankedIndex" must be a number`,
+        );
+      }
+      item.unrankedIndex = obj.unrankedIndex;
+    }
+
     if (obj.tier !== undefined) {
       if (typeof obj.tier !== "string") {
         throw new Error(`Entry at index ${i}: "tier" must be a string`);
@@ -68,14 +78,20 @@ function filterDuplicates(
 }
 
 export default function JsonUpload() {
-  const { items, addItems } = useRankingData();
+  const { items, addItems, activeTierLetters, setActiveTierLetters } =
+    useRankingData();
 
-  // FileReader.onload runs later; it would close over a stale `items` from when
-  // the file was chosen. The ref always holds the latest list for deduping.
+  // FileReader.onload runs later and would close over stale values.
+  // Refs always hold the latest values for use inside the callback.
   const itemsRef = useRef(items);
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
+
+  const activeTierLettersRef = useRef(activeTierLetters);
+  useEffect(() => {
+    activeTierLettersRef.current = activeTierLetters;
+  }, [activeTierLetters]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -104,6 +120,25 @@ export default function JsonUpload() {
         );
         if (toAdd.length > 0) {
           addItems(toAdd);
+
+          // Expand active tier letters if the uploaded data references tiers
+          // beyond the currently active set. All letters up to and including
+          // the highest referenced one are added so the board displays correctly.
+          const highestIdx = toAdd.reduce((max, item) => {
+            const idx = ALL_TIER_LETTERS.indexOf(item.tier ?? "");
+            return idx > max ? idx : max;
+          }, -1);
+
+          if (highestIdx >= 0) {
+            const needed = ALL_TIER_LETTERS.slice(0, highestIdx + 1);
+            const current = activeTierLettersRef.current;
+            const merged = ALL_TIER_LETTERS.filter(
+              (l) => current.includes(l) || needed.includes(l),
+            );
+            if (merged.length > current.length) {
+              setActiveTierLetters(merged);
+            }
+          }
         }
         setSuccess({ added: toAdd.length, duplicates: duplicateCount });
       } catch (err) {
