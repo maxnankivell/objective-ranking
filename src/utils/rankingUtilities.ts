@@ -20,3 +20,30 @@ export function deriveGroups(items?: RankingData[]): Groups {
       .map((i) => i.title) ?? [];
   return { ranked, unranked };
 }
+
+export const TIER_LETTERS = ["S", "A", "B"] as const;
+export type TierLetter = (typeof TIER_LETTERS)[number];
+
+export type TierGroups = {
+  S: string[];
+  A: string[];
+  B: string[];
+  unranked: string[];
+};
+
+export function deriveTierGroups(items?: RankingData[]): TierGroups {
+  const tiers: { S: string[]; A: string[]; B: string[] } = {
+    S: [],
+    A: [],
+    B: [],
+  };
+  const unranked: string[] = [];
+  items?.forEach((item) => {
+    if (item.tier === "S" || item.tier === "A" || item.tier === "B") {
+      tiers[item.tier].push(item.title);
+    } else {
+      unranked.push(item.title);
+    }
+  });
+  return { ...tiers, unranked };
+}

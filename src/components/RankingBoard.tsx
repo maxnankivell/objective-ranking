@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useRankingData } from "../contexts/RankingDataContext";
 import { parseRankingFormatParam } from "../utils/queryStringUtilities";
-import { deriveGroups, type Groups } from "../utils/rankingUtilities";
+import { deriveGroups, deriveTierGroups, TIER_LETTERS, type Groups, type TierGroups, type TierLetter } from "../utils/rankingUtilities";
 import ButtonLink from "./ButtonLink";
 import SortableItemTile from "./SortableItemTile";
 
@@ -16,6 +16,34 @@ type RankingBoardProps = {
 };
 
 export default function RankingBoard({ className }: RankingBoardProps) {
+  const { items } = useRankingData();
+  const searchParams = useSearchParams();
+  const format = parseRankingFormatParam(searchParams.get("format"));
+
+  if (items.length === 0) {
+    return (
+      <p className="text-lg text-subheading">
+        No items yet. Add some data first.
+      </p>
+    );
+  }
+
+  return (
+    <div
+      className={["flex w-full flex-col gap-8", className]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {format === "tierlist" ? (
+        <TierListBoard />
+      ) : (
+        <OrderedBoard />
+      )}
+    </div>
+  );
+}
+
+function OrderedBoard() {
   const { items, updateRanks } = useRankingData();
 
   const [groups, setGroups] = useState<Groups>(() => deriveGroups(items));
@@ -50,78 +78,141 @@ export default function RankingBoard({ className }: RankingBoardProps) {
     updateRanks(updates);
   };
 
-  if (items.length === 0) {
-    return (
-      <p className="text-lg text-subheading">
-        No items yet. Add some data first.
-      </p>
-    );
-  }
-
   return (
-    <div
-      className={["flex w-full flex-col gap-8", className]
-        .filter(Boolean)
-        .join(" ")}
+    <DragDropProvider
+      onDragStart={() => {
+        previousGroups.current = groupsRef.current;
+      }}
+      onDragOver={(event) => {
+        setGroups((current) => {
+          const next = move(current, event);
+          groupsRef.current = next;
+          return next;
+        });
+      }}
+      onDragEnd={(event) => {
+        if (event.canceled) {
+          groupsRef.current = previousGroups.current;
+          setGroups(previousGroups.current);
+          return;
+        }
+        persistRanks(groupsRef.current);
+      }}
     >
-      <DragDropProvider
-        onDragStart={() => {
-          previousGroups.current = groupsRef.current;
-        }}
-        onDragOver={(event) => {
-          setGroups((current) => {
-            const next = move(current, event);
-            groupsRef.current = next;
-            return next;
-          });
-        }}
-        onDragEnd={(event) => {
-          if (event.canceled) {
-            groupsRef.current = previousGroups.current;
-            setGroups(previousGroups.current);
-            return;
-          }
-          persistRanks(groupsRef.current);
-        }}
-      >
-        <RankedZone>
-          {groups.ranked.map((title, index) => {
-            const item = items.find((i) => i.title === title);
-            return (
-              <SortableItemTile
-                key={title}
-                id={title}
-                index={index}
-                group="ranked"
-                title={title}
-                image={item?.image}
-                rank={index + 1}
-              />
-            );
-          })}
-        </RankedZone>
+      <OrderedRankedZone>
+        {groups.ranked.map((title, index) => {
+          const item = items.find((i) => i.title === title);
+          return (
+            <SortableItemTile
+              key={title}
+              id={title}
+              index={index}
+              group="ranked"
+              title={title}
+              image={item?.image}
+              rank={index + 1}
+            />
+          );
+        })}
+      </OrderedRankedZone>
 
-        <UnrankedZone>
-          {groups.unranked.map((title, index) => {
-            const item = items.find((i) => i.title === title);
-            return (
-              <SortableItemTile
-                key={title}
-                id={title}
-                index={index}
-                group="unranked"
-                title={title}
-                image={item?.image}
-              />
-            );
-          })}
-        </UnrankedZone>
-      </DragDropProvider>
-    </div>
+      <UnrankedZone>
+        {groups.unranked.map((title, index) => {
+          const item = items.find((i) => i.title === title);
+          return (
+            <SortableItemTile
+              key={title}
+              id={title}
+              index={index}
+              group="unranked"
+              title={title}
+              image={item?.image}
+            />
+          );
+        })}
+      </UnrankedZone>
+    </DragDropProvider>
   );
 }
 
-function RankedZone({ children }: { children: React.ReactNode }) {
+function TierListBoard() {
+  const { items, updateTiers } = useRankingData();
+
+  const [tierGroups, setTierGroups] = useState<TierGroups>(() =>
+    deriveTierGroups(items),
+  );
+  const tierGroupsRef = useRef(tierGroups);
+  const previousTierGroups = useRef(tierGroups);
+  const [prevItems, setPrevItems] = useState(items);
+
+  if (items !== prevItems) {
+    setPrevItems(items);
+    const prevTitles = new Set(prevItems.map((i) => i.title));
+    const titlesChanged =
+      items.length !== prevItems.length ||
+      items.some((i) => !prevTitles.has(i.title));
+    if (titlesChanged) {
+      setTierGroups(deriveTierGroups(items));
+    }
+  }
+
+  useEffect(() => {
+    tierGroupsRef.current = tierGroups;
+  }, [tierGroups]);
+
+  const persistTiers = (newGroups: TierGroups) => {
+    const updates: { title: string; tier?: string }[] = [
+      ...TIER_LETTERS.flatMap((t) =>
+        newGroups[t].map((title) => ({ title, tier: t })),
+      ),
+      ...newGroups.unranked.map((title) => ({ title, tier: undefined })),
+    ];
+    updateTiers(updates);
+  };
+
+  return (
+    <DragDropProvider
+      onDragStart={() => {
+        previousTierGroups.current = tierGroupsRef.current;
+      }}
+      onDragOver={(event) => {
+        setTierGroups((current) => {
+          const next = move(current, event);
+          tierGroupsRef.current = next;
+          return next;
+        });
+      }}
+      onDragEnd={(event) => {
+        if (event.canceled) {
+          tierGroupsRef.current = previousTierGroups.current;
+          setTierGroups(previousTierGroups.current);
+          return;
+        }
+        persistTiers(tierGroupsRef.current);
+      }}
+    >
+      <TierListRankedZone tierGroups={tierGroups} items={items} />
+
+      <UnrankedZone>
+        {tierGroups.unranked.map((title, index) => {
+          const item = items.find((i) => i.title === title);
+          return (
+            <SortableItemTile
+              key={title}
+              id={title}
+              index={index}
+              group="unranked"
+              title={title}
+              image={item?.image}
+            />
+          );
+        })}
+      </UnrankedZone>
+    </DragDropProvider>
+  );
+}
+
+function OrderedRankedZone({ children }: { children: React.ReactNode }) {
   const { ref, isDropTarget } = useDroppable({
     id: "ranked",
     type: "column",
@@ -149,6 +240,98 @@ function RankedZone({ children }: { children: React.ReactNode }) {
         ) : null}
       </div>
     </section>
+  );
+}
+
+type TierListRankedZoneProps = {
+  tierGroups: TierGroups;
+  items: { title: string; image?: string }[];
+};
+
+function TierListRankedZone({ tierGroups, items }: TierListRankedZoneProps) {
+  return (
+    <section className="flex w-full flex-col gap-2">
+      <h2 className="text-2xl font-bold text-subheading">Tier List</h2>
+      <div className="flex w-full flex-col overflow-hidden rounded-lg border border-mist-200 dark:border-mist-800">
+        {TIER_LETTERS.map((tier, i) => (
+          <TierRow
+            key={tier}
+            tier={tier}
+            titles={tierGroups[tier]}
+            items={items}
+            isLast={i === TIER_LETTERS.length - 1}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const TIER_COLORS: Record<TierLetter, string> = {
+  S: "bg-red-400 dark:bg-red-600",
+  A: "bg-orange-400 dark:bg-orange-600",
+  B: "bg-yellow-400 dark:bg-yellow-600",
+};
+
+type TierRowProps = {
+  tier: TierLetter;
+  titles: string[];
+  items: { title: string; image?: string }[];
+  isLast: boolean;
+};
+
+function TierRow({ tier, titles, items, isLast }: TierRowProps) {
+  const { ref, isDropTarget } = useDroppable({
+    id: tier,
+    type: "column",
+    accept: "item",
+    collisionPriority: CollisionPriority.Low,
+  });
+
+  return (
+    <div
+      className={[
+        "flex min-h-20 w-full items-stretch",
+        !isLast ? "border-b border-mist-200 dark:border-mist-800" : "",
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "flex w-14 shrink-0 items-center justify-center text-2xl font-bold text-white",
+          TIER_COLORS[tier],
+        ].join(" ")}
+      >
+        {tier}
+      </div>
+      <div
+        ref={ref}
+        className={[
+          "flex flex-1 flex-wrap gap-3 p-3 transition-colors",
+          isDropTarget
+            ? "bg-emerald-100 dark:bg-emerald-950"
+            : "bg-mist-100 dark:bg-mist-950",
+        ].join(" ")}
+      >
+        {titles.map((title, index) => {
+          const item = items.find((i) => i.title === title);
+          return (
+            <SortableItemTile
+              key={title}
+              id={title}
+              index={index}
+              group={tier}
+              title={title}
+              image={item?.image}
+            />
+          );
+        })}
+        {titles.length === 0 && (
+          <p className="m-auto text-sm text-neutral-500 dark:text-neutral-400">
+            Drag items here
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
