@@ -185,12 +185,32 @@ function TierListBoard() {
     (l) => !activeTierLetters.includes(l) && l !== "S",
   );
   const canAddTier = activeTierLetters.length < MAX_TIERS;
+  const canRemoveTier = activeTierLetters.length > 1;
 
   const handleAddTier = () => {
     if (!canAddTier || !nextTierLetter) return;
     const next = [...activeTierLetters, nextTierLetter];
     setActiveTierLetters(next);
     setTierGroups((prev) => ({ ...prev, [nextTierLetter]: [] }));
+  };
+
+  const handleRemoveBottomTier = () => {
+    if (!canRemoveTier) return;
+    const bottom = activeTierLetters.at(-1);
+    if (!bottom) return;
+    const titlesFromBottom = tierGroups[bottom] ?? [];
+    setActiveTierLetters(activeTierLetters.slice(0, -1));
+    setTierGroups((prev) => {
+      const next = { ...prev };
+      delete next[bottom];
+      next.unranked = [...(prev.unranked ?? []), ...titlesFromBottom];
+      return next;
+    });
+    if (titlesFromBottom.length > 0) {
+      updateTiers(
+        titlesFromBottom.map((title) => ({ title, tier: undefined })),
+      );
+    }
   };
 
   return (
@@ -220,6 +240,8 @@ function TierListBoard() {
         items={items}
         canAddTier={canAddTier}
         onAddTier={handleAddTier}
+        canRemoveTier={canRemoveTier}
+        onRemoveBottomTier={handleRemoveBottomTier}
       />
 
       <UnrankedZone>
@@ -294,6 +316,8 @@ type TierListRankedZoneProps = {
   items: { title: string; image?: string }[];
   canAddTier: boolean;
   onAddTier: () => void;
+  canRemoveTier: boolean;
+  onRemoveBottomTier: () => void;
 };
 
 function TierListRankedZone({
@@ -302,6 +326,8 @@ function TierListRankedZone({
   items,
   canAddTier,
   onAddTier,
+  canRemoveTier,
+  onRemoveBottomTier,
 }: TierListRankedZoneProps) {
   return (
     <section className="flex w-full flex-col gap-2">
@@ -323,17 +349,35 @@ function TierListRankedZone({
           />
         ))}
       </div>
-      {canAddTier && (
-        <button
-          onClick={onAddTier}
-          className={[
-            "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors self-start",
-            buttonVariantClasses.outlined.default,
-            buttonSizeClasses.small,
-          ].join(" ")}
-        >
-          +
-        </button>
+      {(canAddTier || canRemoveTier) && (
+        <div className="flex w-full flex-row items-center justify-between gap-2">
+          {canAddTier && (
+            <button
+              type="button"
+              onClick={onAddTier}
+              className={[
+                "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors",
+                buttonVariantClasses.outlined.default,
+                buttonSizeClasses.small,
+              ].join(" ")}
+            >
+              +
+            </button>
+          )}
+          {canRemoveTier && (
+            <button
+              type="button"
+              onClick={onRemoveBottomTier}
+              className={[
+                "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors",
+                buttonVariantClasses.outlined.default,
+                buttonSizeClasses.small,
+              ].join(" ")}
+            >
+              -
+            </button>
+          )}
+        </div>
       )}
     </section>
   );
