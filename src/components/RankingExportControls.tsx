@@ -3,12 +3,12 @@
 import { useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 import { useRankingData } from "../contexts/RankingDataContext";
+import { parseRankingFormatParam } from "../utils/queryStringUtilities";
 import {
   buildOrderedExportLines,
   buildTierExportLines,
   type TierGroups,
 } from "../utils/rankingUtilities";
-import { parseRankingFormatParam } from "../utils/queryStringUtilities";
 import Button from "./Button";
 
 function downloadBlob(filename: string, content: string, mime: string) {
@@ -66,10 +66,14 @@ export default function RankingExportControls({
         id={selectId}
         value={exportKind}
         onChange={(e) => setExportKind(e.target.value as "text" | "json")}
-        className="rounded-lg border-2 border-neutral-300 bg-transparent px-3 py-1.5 text-sm text-body outline-none transition-colors focus:border-emerald-500 dark:border-neutral-700 dark:focus:border-emerald-500"
+        className="rounded-lg border-2 border-neutral-300 pl-1.5 pr-4 py-1.5 text-sm text-body outline-none transition-colors focus:border-emerald-500 dark:border-neutral-700 dark:bg-mist-900 dark:scheme-dark dark:focus:border-emerald-500"
       >
-        <option value="text">text</option>
-        <option value="json">json</option>
+        <option className="dark:bg-mist-900" value="text">
+          text
+        </option>
+        <option className="dark:bg-mist-900" value="json">
+          json
+        </option>
       </select>
       <Button
         type="button"
