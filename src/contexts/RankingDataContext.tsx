@@ -8,8 +8,10 @@ import {
   useState,
 } from "react";
 import type { RankingData } from "../types/RankingData";
+import { DEFAULT_TIER_LETTERS } from "../utils/rankingUtilities";
 
 const STORAGE_KEY = "rankingData";
+const TIER_LETTERS_STORAGE_KEY = "tierListActiveTiers";
 
 interface RankingDataContextValue {
   items: RankingData[];
@@ -19,6 +21,8 @@ interface RankingDataContextValue {
   removeItemsByTitle: (title: string) => void;
   updateRanks: (ranked: { title: string; rank?: number; unrankedIndex?: number }[]) => void;
   updateTiers: (updates: { title: string; tier?: string }[]) => void;
+  activeTierLetters: string[];
+  setActiveTierLetters: (letters: string[]) => void;
 }
 
 const RankingDataContext = createContext<RankingDataContextValue | null>(null);
@@ -29,6 +33,7 @@ export function RankingDataProvider({
   children: React.ReactNode;
 }) {
   const [items, setItems] = useState<RankingData[]>([]);
+  const [activeTierLetters, setActiveTierLettersState] = useState<string[]>(DEFAULT_TIER_LETTERS);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -41,6 +46,14 @@ export function RankingDataProvider({
     } catch {
       /* ignore corrupt storage */
     }
+    try {
+      const storedTiers = localStorage.getItem(TIER_LETTERS_STORAGE_KEY);
+      if (storedTiers) {
+        setActiveTierLettersState(JSON.parse(storedTiers));
+      }
+    } catch {
+      /* ignore corrupt storage */
+    }
     setHydrated(true);
   }, []);
 
@@ -48,6 +61,11 @@ export function RankingDataProvider({
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(TIER_LETTERS_STORAGE_KEY, JSON.stringify(activeTierLetters));
+  }, [activeTierLetters, hydrated]);
 
   const addItem = useCallback((item: RankingData) => {
     setItems((prev) => {
@@ -106,6 +124,10 @@ export function RankingDataProvider({
     []
   );
 
+  const setActiveTierLetters = useCallback((letters: string[]) => {
+    setActiveTierLettersState(letters);
+  }, []);
+
   return (
     <RankingDataContext
       value={{
@@ -116,6 +138,8 @@ export function RankingDataProvider({
         removeItemsByTitle,
         updateRanks,
         updateTiers,
+        activeTierLetters,
+        setActiveTierLetters,
       }}
     >
       {children}

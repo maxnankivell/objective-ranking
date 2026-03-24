@@ -7,8 +7,19 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useRankingData } from "../contexts/RankingDataContext";
 import { parseRankingFormatParam } from "../utils/queryStringUtilities";
-import { deriveGroups, deriveTierGroups, TIER_LETTERS, type Groups, type TierGroups, type TierLetter } from "../utils/rankingUtilities";
+import {
+  ALL_TIER_LETTERS,
+  MAX_TIERS,
+  deriveGroups,
+  deriveTierGroups,
+  type Groups,
+  type TierGroups,
+} from "../utils/rankingUtilities";
 import ButtonLink from "./ButtonLink";
+import {
+  buttonSizeClasses,
+  buttonVariantClasses,
+} from "./buttonStyles";
 import SortableItemTile from "./SortableItemTile";
 
 type RankingBoardProps = {
@@ -34,11 +45,7 @@ export default function RankingBoard({ className }: RankingBoardProps) {
         .filter(Boolean)
         .join(" ")}
     >
-      {format === "tierlist" ? (
-        <TierListBoard />
-      ) : (
-        <OrderedBoard />
-      )}
+      {format === "tierlist" ? <TierListBoard /> : <OrderedBoard />}
     </div>
   );
 }
@@ -136,23 +143,26 @@ function OrderedBoard() {
 }
 
 function TierListBoard() {
-  const { items, updateTiers } = useRankingData();
+  const { items, updateTiers, activeTierLetters, setActiveTierLetters } =
+    useRankingData();
 
   const [tierGroups, setTierGroups] = useState<TierGroups>(() =>
-    deriveTierGroups(items),
+    deriveTierGroups(items, activeTierLetters),
   );
   const tierGroupsRef = useRef(tierGroups);
   const previousTierGroups = useRef(tierGroups);
   const [prevItems, setPrevItems] = useState(items);
+  const [prevActiveTiers, setPrevActiveTiers] = useState(activeTierLetters);
 
-  if (items !== prevItems) {
+  if (items !== prevItems || activeTierLetters !== prevActiveTiers) {
     setPrevItems(items);
+    setPrevActiveTiers(activeTierLetters);
     const prevTitles = new Set(prevItems.map((i) => i.title));
     const titlesChanged =
       items.length !== prevItems.length ||
       items.some((i) => !prevTitles.has(i.title));
-    if (titlesChanged) {
-      setTierGroups(deriveTierGroups(items));
+    if (titlesChanged || activeTierLetters !== prevActiveTiers) {
+      setTierGroups(deriveTierGroups(items, activeTierLetters));
     }
   }
 
@@ -162,12 +172,27 @@ function TierListBoard() {
 
   const persistTiers = (newGroups: TierGroups) => {
     const updates: { title: string; tier?: string }[] = [
-      ...TIER_LETTERS.flatMap((t) =>
-        newGroups[t].map((title) => ({ title, tier: t })),
+      ...activeTierLetters.flatMap((t) =>
+        (newGroups[t] ?? []).map((title) => ({ title, tier: t })),
       ),
-      ...newGroups.unranked.map((title) => ({ title, tier: undefined })),
+      ...(newGroups.unranked ?? []).map((title) => ({
+        title,
+        tier: undefined,
+      })),
     ];
     updateTiers(updates);
+  };
+
+  const nextTierLetter = ALL_TIER_LETTERS.find(
+    (l) => !activeTierLetters.includes(l) && l !== "S",
+  );
+  const canAddTier = activeTierLetters.length < MAX_TIERS;
+
+  const handleAddTier = () => {
+    if (!canAddTier || !nextTierLetter) return;
+    const next = [...activeTierLetters, nextTierLetter];
+    setActiveTierLetters(next);
+    setTierGroups((prev) => ({ ...prev, [nextTierLetter]: [] }));
   };
 
   return (
@@ -191,10 +216,16 @@ function TierListBoard() {
         persistTiers(tierGroupsRef.current);
       }}
     >
-      <TierListRankedZone tierGroups={tierGroups} items={items} />
+      <TierListRankedZone
+        tierGroups={tierGroups}
+        activeTiers={activeTierLetters}
+        items={items}
+        canAddTier={canAddTier}
+        onAddTier={handleAddTier}
+      />
 
       <UnrankedZone>
-        {tierGroups.unranked.map((title, index) => {
+        {(tierGroups.unranked ?? []).map((title, index) => {
           const item = items.find((i) => i.title === title);
           return (
             <SortableItemTile
@@ -243,38 +274,66 @@ function OrderedRankedZone({ children }: { children: React.ReactNode }) {
   );
 }
 
-type TierListRankedZoneProps = {
-  tierGroups: TierGroups;
-  items: { title: string; image?: string }[];
+const TIER_COLORS: Record<string, string> = {
+  S: "bg-red-400 dark:bg-red-600",
+  A: "bg-orange-400 dark:bg-orange-600",
+  B: "bg-yellow-400 dark:bg-yellow-600",
+  C: "bg-green-400 dark:bg-green-600",
+  D: "bg-teal-400 dark:bg-teal-600",
+  E: "bg-cyan-400 dark:bg-cyan-600",
+  F: "bg-blue-400 dark:bg-blue-600",
+  G: "bg-indigo-400 dark:bg-indigo-600",
+  H: "bg-violet-400 dark:bg-violet-600",
+  I: "bg-purple-400 dark:bg-purple-600",
 };
 
-function TierListRankedZone({ tierGroups, items }: TierListRankedZoneProps) {
+type TierListRankedZoneProps = {
+  tierGroups: TierGroups;
+  activeTiers: string[];
+  items: { title: string; image?: string }[];
+  canAddTier: boolean;
+  onAddTier: () => void;
+};
+
+function TierListRankedZone({
+  tierGroups,
+  activeTiers,
+  items,
+  canAddTier,
+  onAddTier,
+}: TierListRankedZoneProps) {
   return (
     <section className="flex w-full flex-col gap-2">
       <h2 className="text-2xl font-bold text-subheading">Tier List</h2>
       <div className="flex w-full flex-col overflow-hidden rounded-lg border border-mist-200 dark:border-mist-800">
-        {TIER_LETTERS.map((tier, i) => (
+        {activeTiers.map((tier, i) => (
           <TierRow
             key={tier}
             tier={tier}
-            titles={tierGroups[tier]}
+            titles={tierGroups[tier] ?? []}
             items={items}
-            isLast={i === TIER_LETTERS.length - 1}
+            isLast={i === activeTiers.length - 1}
           />
         ))}
       </div>
+      {canAddTier && (
+        <button
+          onClick={onAddTier}
+          className={[
+            "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors self-start",
+            buttonVariantClasses.outlined.default,
+            buttonSizeClasses.small,
+          ].join(" ")}
+        >
+          +
+        </button>
+      )}
     </section>
   );
 }
 
-const TIER_COLORS: Record<TierLetter, string> = {
-  S: "bg-red-400 dark:bg-red-600",
-  A: "bg-orange-400 dark:bg-orange-600",
-  B: "bg-yellow-400 dark:bg-yellow-600",
-};
-
 type TierRowProps = {
-  tier: TierLetter;
+  tier: string;
   titles: string[];
   items: { title: string; image?: string }[];
   isLast: boolean;
@@ -298,7 +357,7 @@ function TierRow({ tier, titles, items, isLast }: TierRowProps) {
       <div
         className={[
           "flex w-14 shrink-0 items-center justify-center text-2xl font-bold text-white",
-          TIER_COLORS[tier],
+          TIER_COLORS[tier] ?? "bg-neutral-400 dark:bg-neutral-600",
         ].join(" ")}
       >
         {tier}

@@ -21,29 +21,33 @@ export function deriveGroups(items?: RankingData[]): Groups {
   return { ranked, unranked };
 }
 
-export const TIER_LETTERS = ["S", "A", "B"] as const;
-export type TierLetter = (typeof TIER_LETTERS)[number];
+export const DEFAULT_TIER_LETTERS = ["S", "A", "B"];
+export const ALL_TIER_LETTERS = [
+  "S",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+];
+export const MAX_TIERS = 10;
 
-export type TierGroups = {
-  S: string[];
-  A: string[];
-  B: string[];
-  unranked: string[];
-};
+export type TierGroups = Record<string, string[]>;
 
-export function deriveTierGroups(items?: RankingData[]): TierGroups {
-  const tiers: { S: string[]; A: string[]; B: string[] } = {
-    S: [],
-    A: [],
-    B: [],
-  };
-  const unranked: string[] = [];
+export function deriveTierGroups(
+  items?: RankingData[],
+  activeTiers = DEFAULT_TIER_LETTERS,
+): TierGroups {
+  const result: TierGroups = { unranked: [] };
+  for (const t of activeTiers) result[t] = [];
   items?.forEach((item) => {
-    if (item.tier === "S" || item.tier === "A" || item.tier === "B") {
-      tiers[item.tier].push(item.title);
-    } else {
-      unranked.push(item.title);
-    }
+    if (item.tier && activeTiers.includes(item.tier))
+      result[item.tier].push(item.title);
+    else result.unranked.push(item.title);
   });
-  return { ...tiers, unranked };
+  return result;
 }
