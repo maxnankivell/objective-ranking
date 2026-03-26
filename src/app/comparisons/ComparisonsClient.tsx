@@ -23,7 +23,7 @@ const pressStart2P = Press_Start_2P({
 });
 
 export default function ComparisonsClient() {
-  const { items, updateRanks, updateTiers } = useRankingData();
+  const { items, updateRanks, updateTiers, setActiveTierLetters } = useRankingData();
 
   const searchParams = useSearchParams();
   const format = parseRankingFormatParam(searchParams.get("format"));
@@ -45,6 +45,11 @@ export default function ComparisonsClient() {
     ranksUpdatedRef.current = true;
 
     if (format === "tierlist") {
+      const usedTiers = ALL_TIER_LETTERS.slice(
+        0,
+        Math.min(sortedGroups.length, ALL_TIER_LETTERS.length),
+      );
+      setActiveTierLetters(usedTiers);
       updateTiers(assignTiers(sortedGroups, ALL_TIER_LETTERS));
     } else {
       updateRanks(
@@ -53,7 +58,7 @@ export default function ComparisonsClient() {
         ),
       );
     }
-  }, [sortState, format, updateRanks, updateTiers]);
+  }, [sortState, format, updateRanks, updateTiers, setActiveTierLetters]);
 
   if (items.length === 0) {
     return (
