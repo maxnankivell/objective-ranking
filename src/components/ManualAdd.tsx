@@ -76,9 +76,11 @@ export default function ManualAdd() {
         />
       </div>
 
-      <Button type="submit" variant="outlined" size="small">
-        Add
-      </Button>
+      <div>
+        <Button type="submit" variant="outlined" size="small">
+          Add
+        </Button>
+      </div>
     </form>
   );
 }

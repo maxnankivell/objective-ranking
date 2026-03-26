@@ -49,7 +49,7 @@ export default function Button({
       type={type ?? "button"}
       className={[
         "flex cursor-pointer items-center justify-center gap-2 rounded-full font-bold transition-colors disabled:cursor-not-allowed",
-        fullWidth ? "w-full max-w-none" : "max-w-40",
+        fullWidth ? "w-full max-w-none" : "",
         buttonVariantClasses[variant][tone],
         buttonSizeClasses[size],
         className,
