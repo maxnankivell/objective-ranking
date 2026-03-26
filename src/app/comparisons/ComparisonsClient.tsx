@@ -2,6 +2,7 @@
 
 import { Press_Start_2P } from "next/font/google";
 import Image from "next/image";
+import shuffle from "lodash/shuffle";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Button from "../../components/Button";
@@ -40,7 +41,7 @@ export default function ComparisonsClient() {
   useEffect(() => {
     if (items.length > 0 && sortState === null) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSortState(initSortState(items));
+      setSortState(initSortState(shuffle(items)));
     }
   }, [items, sortState]);
 
