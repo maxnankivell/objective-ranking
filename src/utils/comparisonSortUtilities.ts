@@ -1,37 +1,40 @@
 import type { RankingData } from "../types/RankingData";
 
+/** A group of items that share the same tier position. */
+export type Group = RankingData[];
+
 export type MergeJob = {
-  left: RankingData[];
-  right: RankingData[];
+  left: Group[];
+  right: Group[];
   leftPtr: number;
   rightPtr: number;
-  merged: RankingData[];
+  merged: Group[];
 };
 
 export type SortState = {
   pendingJobs: MergeJob[];
   currentJob: MergeJob | null;
-  completedGroups: RankingData[][];
+  completedGroups: Group[][];
   isDone: boolean;
 };
 
-export function createJobs(groups: RankingData[][]): {
+export function createJobs(chunks: Group[][]): {
   jobs: MergeJob[];
-  passThrough: RankingData[][];
+  passThrough: Group[][];
 } {
   const jobs: MergeJob[] = [];
-  const passThrough: RankingData[][] = [];
-  for (let i = 0; i < groups.length; i += 2) {
-    if (i + 1 < groups.length) {
+  const passThrough: Group[][] = [];
+  for (let i = 0; i < chunks.length; i += 2) {
+    if (i + 1 < chunks.length) {
       jobs.push({
-        left: groups[i],
-        right: groups[i + 1],
+        left: chunks[i],
+        right: chunks[i + 1],
         leftPtr: 0,
         rightPtr: 0,
         merged: [],
       });
     } else {
-      passThrough.push(groups[i]);
+      passThrough.push(chunks[i]);
     }
   }
   return { jobs, passThrough };
@@ -42,12 +45,12 @@ export function initSortState(items: RankingData[]): SortState {
     return {
       pendingJobs: [],
       currentJob: null,
-      completedGroups: items.length === 1 ? [items] : [],
+      completedGroups: items.length === 1 ? [[[items[0]]]] : [],
       isDone: true,
     };
   }
-  const groups = items.map((item) => [item]);
-  const { jobs, passThrough } = createJobs(groups);
+  const chunks: Group[][] = items.map((item) => [[item]]);
+  const { jobs, passThrough } = createJobs(chunks);
   return {
     currentJob: jobs[0] ?? null,
     pendingJobs: jobs.slice(1),
@@ -58,7 +61,7 @@ export function initSortState(items: RankingData[]): SortState {
 
 export function advanceSortState(
   prev: SortState,
-  choice: "left" | "right",
+  choice: "left" | "right" | "same",
 ): SortState {
   if (!prev.currentJob) return prev;
 
@@ -73,8 +76,12 @@ export function advanceSortState(
   if (choice === "left") {
     job.merged.push(job.left[job.leftPtr]);
     job.leftPtr++;
-  } else {
+  } else if (choice === "right") {
     job.merged.push(job.right[job.rightPtr]);
+    job.rightPtr++;
+  } else {
+    job.merged.push([...job.left[job.leftPtr], ...job.right[job.rightPtr]]);
+    job.leftPtr++;
     job.rightPtr++;
   }
 
@@ -124,4 +131,46 @@ export function advanceSortState(
     completedGroups: passThrough,
     isDone: false,
   };
+}
+
+/**
+ * Distributes N sorted groups into at most `tierLetters.length` tiers.
+ * When N > T, excess groups are absorbed by the bottom tiers (worst first).
+ *
+ * Example: N=13, T=10 → top 7 tiers get 1 group each, bottom 3 tiers get 2 groups each.
+ */
+export function assignTiers(
+  sortedGroups: Group[],
+  tierLetters: string[],
+): { title: string; tier: string }[] {
+  const N = sortedGroups.length;
+  const T = tierLetters.length;
+
+  if (N === 0) return [];
+
+  if (N <= T) {
+    return sortedGroups.flatMap((group, i) =>
+      group.map((item) => ({ title: item.title, tier: tierLetters[i] })),
+    );
+  }
+
+  // N > T: distribute across all T tiers.
+  // Bottom `extra` tiers absorb one additional group each.
+  const base = Math.floor(N / T);
+  const extra = N % T;
+  const result: { title: string; tier: string }[] = [];
+  let groupIdx = 0;
+
+  for (let tierIdx = 0; tierIdx < T; tierIdx++) {
+    const isBottomTier = extra > 0 && tierIdx >= T - extra;
+    const count = isBottomTier ? base + 1 : base;
+    for (let j = 0; j < count; j++) {
+      const group = sortedGroups[groupIdx++];
+      for (const item of group) {
+        result.push({ title: item.title, tier: tierLetters[tierIdx] });
+      }
+    }
+  }
+
+  return result;
 }

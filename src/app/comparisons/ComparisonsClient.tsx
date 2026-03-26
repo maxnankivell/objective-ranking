@@ -4,15 +4,18 @@ import { Press_Start_2P } from "next/font/google";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Button from "../../components/Button";
 import ButtonLink from "../../components/ButtonLink";
 import { useRankingData } from "../../contexts/RankingDataContext";
 import type { RankingData } from "../../types/RankingData";
 import {
   advanceSortState,
+  assignTiers,
   initSortState,
   type SortState,
 } from "../../utils/comparisonSortUtilities";
 import { parseRankingFormatParam } from "../../utils/queryStringUtilities";
+import { ALL_TIER_LETTERS } from "../../utils/rankingUtilities";
 
 const pressStart2P = Press_Start_2P({
   weight: "400",
@@ -20,7 +23,7 @@ const pressStart2P = Press_Start_2P({
 });
 
 export default function ComparisonsClient() {
-  const { items, updateRanks } = useRankingData();
+  const { items, updateRanks, updateTiers } = useRankingData();
 
   const searchParams = useSearchParams();
   const format = parseRankingFormatParam(searchParams.get("format"));
@@ -37,11 +40,20 @@ export default function ComparisonsClient() {
 
   useEffect(() => {
     if (!sortState?.isDone || ranksUpdatedRef.current) return;
-    const sorted = sortState.completedGroups[0];
-    if (!sorted) return;
+    const sortedGroups = sortState.completedGroups[0];
+    if (!sortedGroups) return;
     ranksUpdatedRef.current = true;
-    updateRanks(sorted.map((item, i) => ({ title: item.title, rank: i + 1 })));
-  }, [sortState, updateRanks]);
+
+    if (format === "tierlist") {
+      updateTiers(assignTiers(sortedGroups, ALL_TIER_LETTERS));
+    } else {
+      updateRanks(
+        sortedGroups.flatMap((group, i) =>
+          group.map((item) => ({ title: item.title, rank: i + 1 })),
+        ),
+      );
+    }
+  }, [sortState, format, updateRanks, updateTiers]);
 
   if (items.length === 0) {
     return (
@@ -76,10 +88,10 @@ export default function ComparisonsClient() {
   const { currentJob } = sortState;
   if (!currentJob) return null;
 
-  const leftItem = currentJob.left[currentJob.leftPtr];
-  const rightItem = currentJob.right[currentJob.rightPtr];
+  const leftItem = currentJob.left[currentJob.leftPtr][0];
+  const rightItem = currentJob.right[currentJob.rightPtr][0];
 
-  function handleChoice(choice: "left" | "right") {
+  function handleChoice(choice: "left" | "right" | "same") {
     setSortState((prev) => {
       if (!prev?.currentJob) return prev;
       return advanceSortState(prev, choice);
@@ -90,11 +102,22 @@ export default function ComparisonsClient() {
     <div className="flex flex-col flex-1 items-center justify-center">
       <div className="flex items-center gap-6 sm:gap-12 lg:gap-20">
         <ComparisonCard item={leftItem} onClick={() => handleChoice("left")} />
-        <span
-          className={`${pressStart2P.className} text-2xl sm:text-4xl md:text-5xl lg:text-7xl text-heading select-none shrink-0`}
-        >
-          VS
-        </span>
+        <div className="flex flex-col items-center gap-4 shrink-0">
+          <span
+            className={`${pressStart2P.className} text-2xl sm:text-4xl md:text-5xl lg:text-7xl text-heading select-none`}
+          >
+            VS
+          </span>
+          {format === "tierlist" && (
+            <Button
+              variant="outlined"
+              size="medium"
+              onClick={() => handleChoice("same")}
+            >
+              Same Tier
+            </Button>
+          )}
+        </div>
         <ComparisonCard
           item={rightItem}
           onClick={() => handleChoice("right")}
