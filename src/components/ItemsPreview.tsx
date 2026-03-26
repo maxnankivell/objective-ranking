@@ -34,7 +34,7 @@ export default function ItemsPreview({ className }: ItemsPreviewProps) {
           Clear All
         </Button>
       </div>
-      <div className="grid w-full grid-cols-[repeat(auto-fit,minmax(6rem,1fr))] justify-items-center gap-3 rounded-lg bg-mist-100 p-4 dark:bg-mist-950">
+      <div className="grid w-full min-h-40 grid-cols-[repeat(auto-fill,minmax(5.25rem,max-content))] place-content-center justify-items-center gap-3 rounded-lg p-4 transition-colors bg-mist-100 dark:bg-mist-950">
         {items.map((item, i) => (
           <ItemTile
             key={`${item.title}-${i}`}

@@ -280,7 +280,7 @@ function OrderedRankedZone({ children }: { children: React.ReactNode }) {
       <div
         ref={ref}
         className={[
-          "grid w-full min-h-40 grid-cols-[repeat(auto-fill,minmax(6rem,max-content))] place-content-center justify-items-center gap-3 rounded-lg p-4 transition-colors",
+          "grid w-full min-h-40 grid-cols-[repeat(auto-fill,minmax(5.25rem,max-content))] place-content-center justify-items-center gap-3 rounded-lg p-4 transition-colors",
           isDropTarget
             ? "bg-emerald-100 dark:bg-emerald-950"
             : "bg-mist-100 dark:bg-mist-950",
@@ -472,7 +472,7 @@ function UnrankedZone({ children }: { children: React.ReactNode }) {
       <div
         ref={ref}
         className={[
-          "grid w-full min-h-40 grid-cols-[repeat(auto-fill,minmax(6rem,max-content))] place-content-center justify-items-center gap-3 rounded-lg p-4 transition-colors",
+          "grid w-full min-h-40 grid-cols-[repeat(auto-fill,minmax(5.25rem,max-content))] place-content-center justify-items-center gap-3 rounded-lg p-4 transition-colors",
           isDropTarget
             ? "bg-emerald-100 dark:bg-emerald-950"
             : "bg-mist-100 dark:bg-mist-950",
