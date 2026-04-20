@@ -6,7 +6,7 @@
       let pkgs = import nixpkgs { system = "x86_64-linux"; };
       in pkgs.mkShell {
         packages = [
-          pkgs.nodejs-slim_24
+          pkgs.nodejs_24
           pkgs.pnpm
         ];
       };

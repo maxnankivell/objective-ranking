@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "preinstall": "npx only-allow@1.2.2 pnpm"
   },
   "dependencies": {
     "@dnd-kit/helpers": "^0.3.2",
